@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:quizzler/quiz_brain.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
+
+QuizBrain quizBrain = QuizBrain();
 
 void main() => runApp(Quizzler());
 
@@ -27,20 +31,7 @@ class QuizPage extends StatefulWidget {
 }
 
 class _QuizPageState extends State<QuizPage> {
-  List<Widget> scoreKeeper = [
-    const Icon(
-      Icons.check,
-      color: Colors.green,
-    ),
-    const Icon(
-      Icons.close,
-      color: Colors.red,
-    ),
-    const Icon(
-      Icons.check,
-      color: Colors.green,
-    ),
-  ];
+  List<Widget> scoreKeeper = [];
 
   @override
   Widget build(BuildContext context) {
@@ -48,15 +39,15 @@ class _QuizPageState extends State<QuizPage> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        const Expanded(
+        Expanded(
           flex: 5,
           child: Padding(
-            padding: EdgeInsets.all(10.0),
+            padding: const EdgeInsets.all(10.0),
             child: Center(
               child: Text(
-                'This is where the question text will go.',
+                quizBrain.getQuestionText(),
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 25.0,
                   color: Colors.white,
                 ),
@@ -70,7 +61,7 @@ class _QuizPageState extends State<QuizPage> {
             child: FlatButton(
               textColor: Colors.white,
               color: Colors.green,
-              child: const T1ext(
+              child: const Text(
                 'True',
                 style: TextStyle(
                   color: Colors.white,
@@ -79,10 +70,13 @@ class _QuizPageState extends State<QuizPage> {
               ),
               onPressed: () {
                 setState(() {
-                  scoreKeeper.add(const Icon(
-                    Icons.check,
-                    color: Colors.green,
-                  ));
+                  if (quizBrain.isFinished() == false) {
+                    checkCorrect(true);
+                  }
+                  quizBrain.nexQuestion();
+                  if (quizBrain.isFinished() == true) {
+                    _onAlertButtonPressed(context);
+                  }
                 });
                 //The user picked true.
               },
@@ -91,7 +85,7 @@ class _QuizPageState extends State<QuizPage> {
         ),
         Expanded(
           child: Padding(
-            padding: EdgeInsets.all(15.0),
+            padding: const EdgeInsets.all(15.0),
             child: FlatButton(
               color: Colors.red,
               child: const Text(
@@ -103,10 +97,13 @@ class _QuizPageState extends State<QuizPage> {
               ),
               onPressed: () {
                 setState(() {
-                  scoreKeeper.add(const Icon(
-                    Icons.close,
-                    color: Colors.red,
-                  ));
+                  if (quizBrain.isFinished() == false) {
+                    checkCorrect(false);
+                  }
+                  quizBrain.nexQuestion();
+                  if (quizBrain.isFinished() == true) {
+                    _onAlertButtonPressed(context);
+                  }
                 });
                 //The user picked false.
               },
@@ -119,10 +116,44 @@ class _QuizPageState extends State<QuizPage> {
       ],
     );
   }
-}
 
-/*
-question1: 'You can lead a cow down stairs but not up stairs.', false,
-question2: 'Approximately one quarter of human bones are in the feet.', true,
-question3: 'A slug\'s blood is green.', true,
-*/
+  void checkCorrect(bool buttonType) {
+    if (quizBrain.getQuestionAnswer() == buttonType) {
+      scoreKeeper.add(const Icon(
+        Icons.check,
+        color: Colors.green,
+      ));
+    } else {
+      scoreKeeper.add(const Icon(
+        Icons.close,
+        color: Colors.red,
+      ));
+    }
+  }
+
+  _onAlertButtonPressed(context) {
+    Alert(
+      context: context,
+      type: AlertType.error,
+      title: "RFLUTTER ALERT",
+      desc: "Flutter is more awesome with RFlutter Alert.",
+      buttons: [
+        DialogButton(
+          child: const Text(
+            "COOL",
+            style: TextStyle(color: Colors.white, fontSize: 20),
+          ),
+          onPressed: () {
+            setState(() {
+              Navigator.pop(context);
+              quizBrain.reset();
+              scoreKeeper = [];
+            });
+          },
+          color: const Color.fromRGBO(0, 179, 134, 1.0),
+          radius: BorderRadius.circular(0.0),
+        ),
+      ],
+    ).show();
+  }
+}
